@@ -83,7 +83,7 @@ def transaction_fetch(transaction_page, stmt, stmt_year):
 
             reg_key = re.compile(r'(\w+\s*\d+)\s*(\w+\s*\d+)\s*(.*[^-$\s$])\s*(-?\s?\$.*.\d+)')  # Transaction regex key
             fx_code_key = re.compile(r'([A-Z]{3})\s?')
-            interest_key = re.compile(r'(Interest Charge on [a-zA-Z\s]+)(-?\s?\$.*.\d+)')
+            interest_key = re.compile(r'(Interest Charge on [a-zA-Z\s\/\']+)(-?\s?\$.*.\d+)')
 
             # name_key_multi = re.compile(
             #     r'(.*) (\d-\d+) (-?\$.*.\d+)')  # 'WINSTON W MCFARLANE 9-31001 $898.02 $0.00 $898.02'
