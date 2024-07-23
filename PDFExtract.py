@@ -9,6 +9,7 @@ from Parse_USBANK_DB import *
 from Parse_PAYPAL_DB import *
 from Parse_BANKOFAMERICA_DB import *
 from Parse_PAYPAL_CC import *
+from Parse_SQUARE_DB import *
 import os
 from time import perf_counter
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         check_count = 0
 
         # if amex CC key in text, identify statement as Amex CC
-        if amex_CC_ID in text:
+        if amex_CC_ID in text or amex_CC_ID_2 in text:
             print("Amex CC")
             stmt_style = "PAR"
             StatementID = "amex_CC"
@@ -190,6 +191,23 @@ if __name__ == '__main__':
                 trans_desc.extend(t_desc)
                 trans_date.extend(t_date)
                 trans_amt.extend(t_amt)
+                if (len(trans_amt)) != (len(trans_desc)) != (len(trans_date)):
+                    print("Error: Transaction count disparity")
+
+        elif square_DB_ID in text:
+            print("Square DB")
+            stmt_style = "PAR"
+            StatementID = "square_DB"
+            for item in sorted(statementPDF):
+                statements_arr = square_db_parse(parser_dir + '/' + item)
+                # o_date, o_bal, c_date, c_bal, t_amt, t_date, t_desc = amex_cc_parse(parser_dir + '/' + item)
+                # opening_date.append(o_date)
+                # opening_bal.append(o_bal)
+                # closing_date.extend(c_date)
+                # closing_bal.append(c_bal)
+                # trans_desc.extend(t_desc)
+                # trans_date.extend(t_date)
+                # trans_amt.extend(t_amt)
                 if (len(trans_amt)) != (len(trans_desc)) != (len(trans_date)):
                     print("Error: Transaction count disparity")
 
