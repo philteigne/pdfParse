@@ -5,7 +5,7 @@ import re
 
 # SUBSTRING IDENTIFIERS
 amex_CC_ID = "MakecheckpayabletoAmericanExpress."
-
+amex_CC_ID_2 = "Make check payable to American Express."
 
 # AMEX CREDIT CARD PARSER
 def summary_pull(lst):
