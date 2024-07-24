@@ -303,5 +303,16 @@ def bankofamerica_db_parse(statement):
         # repeat closing date entries to match number of transactions
         # closing_date = [closing_date] * len(trans_desc)
 
+        statement_object = {'1': {
+            'opening_date': [opening_date],
+            'opening_bal': [opening_bal],
+            'closing_date': closing_date,
+            'closing_bal': [closing_bal],
+            'txn_desc': trans_desc,
+            'txn_date': trans_date,
+            'txn_amt': trans_amt,
+            'check_count': 0,
+        }}
+
     # return opening_date, opening_bal, closing_date, closing_bal, trans_amt, trans_date, trans_desc, check_count
     return 5

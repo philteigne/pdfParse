@@ -57,6 +57,7 @@ def summary_pull(pull_list):
             acct_id = acct_id_match.group(1)
             if acct_id not in square_statements:
                 square_statements[acct_id] = {}
+                square_statements[acct_id]['acct_id'] = acct_id
             print("Account ID: ")
             print(acct_id)
 
@@ -137,5 +138,7 @@ def square_db_parse(statement):
         # extend closing dates
         for key in square_statements:
             square_statements[key]["closing_date"] = square_statements[key]["closing_date"] * len(square_statements[key]["txn_desc"])
+            # also add in check count
+            square_statements[key]["check_count"] = 0
 
     return square_statements
