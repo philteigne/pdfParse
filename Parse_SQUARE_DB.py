@@ -61,17 +61,60 @@ def summary_pull(pull_list):
             print(acct_id)
 
         if closing_bal is not None and opening_bal is not None and opening_date is not None and closing_date is not None and acct_id is not None:
-            square_statements[acct_id]["closing_bal"] = closing_bal
-            square_statements[acct_id]["opening_bal"] = opening_bal
-            square_statements[acct_id]["opening_date"] = opening_date
-            square_statements[acct_id]["closing_date"] = closing_date
+            square_statements[acct_id]["closing_bal"] = [closing_bal]
+            square_statements[acct_id]["opening_bal"] = [opening_bal]
+            square_statements[acct_id]["opening_date"] = [opening_date]
+            square_statements[acct_id]["closing_date"] = [closing_date]
+            square_statements[acct_id]["txn_desc"] = []
+            square_statements[acct_id]["txn_date"] = []
+            square_statements[acct_id]["txn_amt"] = []
             break
 
     return acct_id
 
 
+def transaction_fetch(pull_list, acct_id):
+    pull_list.append("--END OF PAGE--")
 
+    txn_start_key = re.compile(r'(\d\d?\/\d\d?\/\d{4}) (.+?)( --)? (\(?\$[0-9,\.]*\)?)( --)? (\(?\$[0-9,\.]*\)?)')
+    txn_time_key = re.compile(r'\d\d?:\d\d? [AP]M ?(.*)?')
 
+    current_txn = None
+    current_date = None
+    current_amt = None
+
+    for item in pull_list:
+        if "Beginning Balance" in item:
+            continue
+
+        # Found start of transaction
+        if txn_start_key.match(item) is not None or "--END OF PAGE--" in item or "Ending Balance" in item:
+            if current_txn is not None:
+                square_statements[acct_id]["txn_desc"].append(current_txn)
+                square_statements[acct_id]["txn_date"].append(current_date)
+                square_statements[acct_id]["txn_amt"].append(current_amt)
+
+            if "--END OF PAGE--" in item or 'Ending Balance' in item:
+                return
+
+            txn_match = txn_start_key.match(item)
+
+            current_txn = txn_match.group(2)
+            current_date = datetime.strptime(txn_match.group(1), '%m/%d/%Y')
+            current_amt = txn_match.group(4)
+            current_amt = current_amt.replace("$", "")
+            current_amt = current_amt.replace(",", "")
+            current_amt = current_amt.replace("(", "-")
+            current_amt = current_amt.replace(")", "")
+            current_amt = float(current_amt)
+
+        # Transaction has started and continuation is found
+        elif current_txn is not None:
+            if txn_time_key.match(item) is not None:
+                txn_match = txn_time_key.match(item)
+                current_txn = current_txn + " " + txn_match.group(1)
+            else:
+                current_txn = current_txn + " " + item
 
 def square_db_parse(statement):
     with pdfplumber.open(statement) as pdf:
@@ -83,14 +126,16 @@ def square_db_parse(statement):
 
             if "BALANCE INFORMATION" in text:
                 acct_id = summary_pull(pull_list)
-                print(square_statements[acct_id])
 
             else:
                 # parse through transaction page and pull out relevant information
                 transaction_fetch(pull_list, acct_id)
 
+        # combine transactions
+        # transactions_combine()
 
-            # repeat closing date entries to match number of transactions
-            square_statements[acct_id]["closing_date"] = [square_statements[acct_id]["closing_date"]] * len(square_statements[acct_id]["trans_desc"])
+        # extend closing dates
+        for key in square_statements:
+            square_statements[key]["closing_date"] = square_statements[key]["closing_date"] * len(square_statements[key]["txn_desc"])
 
-    # return opening_date, opening_bal, closing_date, closing_bal, trans_amt, trans_date, trans_desc, check_count
+    return square_statements
