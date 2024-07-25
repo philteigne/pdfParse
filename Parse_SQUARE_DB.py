@@ -117,6 +117,50 @@ def transaction_fetch(pull_list, acct_id):
             else:
                 current_txn = current_txn + " " + item
 
+def transaction_combine(txn_desc, txn_date, txn_amt):
+    curr_desc = None
+    curr_date = None
+    curr_amt = 0
+
+    comb_desc = []
+    comb_date = []
+    comb_amt = []
+
+    for i in range(len(txn_desc)):
+        print(txn_desc[i])
+        if txn_date[i] != curr_date:
+            # Date has changed, write stored values
+            if curr_desc is not None and curr_amt != 0:
+                comb_desc.append(curr_desc)
+                comb_date.append(curr_date)
+                comb_amt.append(curr_amt)
+                curr_amt = 0
+            # If desired description, record new values
+            if "Automated savings" in txn_desc[i]:
+                curr_desc = txn_desc[i]
+                curr_date = txn_date[i]
+                curr_amt += txn_amt[i]
+                continue
+
+        # If target description, add transaction value to sum
+        if "Automated savings" in txn_desc[i]:
+            curr_amt += txn_amt[i]
+        # If non-target description, record transaction
+        else:
+            comb_desc.append(txn_desc[i])
+            comb_date.append(txn_date[i])
+            comb_amt.append(txn_amt[i])
+
+    if curr_desc != 0:
+        # There are leftover transactions, write them
+        comb_desc.append(curr_desc)
+        comb_date.append(curr_date)
+        comb_amt.append(curr_amt)
+        curr_amt = 0
+
+    return comb_desc, comb_date, comb_amt
+
+
 def square_db_parse(statement):
     with pdfplumber.open(statement) as pdf:
         for count, entry in enumerate(pdf.pages):
@@ -132,11 +176,9 @@ def square_db_parse(statement):
                 # parse through transaction page and pull out relevant information
                 transaction_fetch(pull_list, acct_id)
 
-        # combine transactions
-        # transactions_combine()
-
         # extend closing dates
         for key in square_statements:
+            square_statements[key]["txn_desc"], square_statements[key]["txn_date"], square_statements[key]["txn_amt"] = transaction_combine(square_statements[key]["txn_desc"], square_statements[key]["txn_date"], square_statements[key]["txn_amt"])
             square_statements[key]["closing_date"] = square_statements[key]["closing_date"] * len(square_statements[key]["txn_desc"])
             # also add in check count
             square_statements[key]["check_count"] = 0
