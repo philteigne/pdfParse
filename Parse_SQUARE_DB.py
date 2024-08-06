@@ -6,9 +6,7 @@ import re
 # SUBSTRING IDENTIFIERS
 square_DB_ID = "3165 E. Millrock Drive Suite 160"
 
-square_statements = {}
-
-def summary_pull(pull_list):
+def summary_pull(pull_list, square_statements):
     opening_date = None
     opening_bal = None
     closing_date = None
@@ -74,7 +72,7 @@ def summary_pull(pull_list):
     return acct_id
 
 
-def transaction_fetch(pull_list, acct_id):
+def transaction_fetch(pull_list, acct_id, square_statements):
     pull_list.append("--END OF PAGE--")
 
     txn_start_key = re.compile(r'(\d\d?\/\d\d?\/\d{4}) (.+?)( --)? (\(?\$[0-9,\.]*\)?)( --)? (\(?\$[0-9,\.]*\)?)')
@@ -89,13 +87,13 @@ def transaction_fetch(pull_list, acct_id):
             continue
 
         # Found start of transaction
-        if txn_start_key.match(item) is not None or "--END OF PAGE--" in item or "Ending Balance" in item:
+        if txn_start_key.match(item) is not None or "--END OF PAGE--" in item or "Ending Balance" in item or "No activity this month" in item:
             if current_txn is not None:
                 square_statements[acct_id]["txn_desc"].append(current_txn)
                 square_statements[acct_id]["txn_date"].append(current_date)
                 square_statements[acct_id]["txn_amt"].append(current_amt)
 
-            if "--END OF PAGE--" in item or 'Ending Balance' in item:
+            if "--END OF PAGE--" in item or 'Ending Balance' in item or "No activity this month" in item:
                 return
 
             txn_match = txn_start_key.match(item)
@@ -127,11 +125,10 @@ def transaction_combine(txn_desc, txn_date, txn_amt):
     comb_amt = []
 
     for i in range(len(txn_desc)):
-        print(txn_desc[i])
         if txn_date[i] != curr_date:
             # Date has changed, write stored values
             if curr_desc is not None and curr_amt != 0:
-                comb_desc.append(curr_desc)
+                comb_desc.append(curr_desc + " | Daily Total")
                 comb_date.append(curr_date)
                 comb_amt.append(curr_amt)
                 curr_amt = 0
@@ -151,9 +148,9 @@ def transaction_combine(txn_desc, txn_date, txn_amt):
             comb_date.append(txn_date[i])
             comb_amt.append(txn_amt[i])
 
-    if curr_desc != 0:
+    if curr_amt != 0:
         # There are leftover transactions, write them
-        comb_desc.append(curr_desc)
+        comb_desc.append(curr_desc + " | Daily Total")
         comb_date.append(curr_date)
         comb_amt.append(curr_amt)
         curr_amt = 0
@@ -162,6 +159,7 @@ def transaction_combine(txn_desc, txn_date, txn_amt):
 
 
 def square_db_parse(statement):
+    square_statements = {}
     with pdfplumber.open(statement) as pdf:
         for count, entry in enumerate(pdf.pages):
             page = pdf.pages[count]
@@ -170,11 +168,11 @@ def square_db_parse(statement):
             # print(pull_list)
 
             if "BALANCE INFORMATION" in text:
-                acct_id = summary_pull(pull_list)
+                acct_id = summary_pull(pull_list, square_statements)
 
             else:
                 # parse through transaction page and pull out relevant information
-                transaction_fetch(pull_list, acct_id)
+                transaction_fetch(pull_list, acct_id, square_statements)
 
         # extend closing dates
         for key in square_statements:
