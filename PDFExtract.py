@@ -1,4 +1,5 @@
 ﻿import pdfplumber
+import copy
 from Parse_AMEX_CC import *
 from Parse_CAP1_CC import *
 from Parse_TD_DB import *
@@ -70,7 +71,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
                 print("statements_obj", statements_obj)
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -93,7 +94,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -116,7 +117,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -139,7 +140,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -162,7 +163,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -185,7 +186,7 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                         len(statements_obj[key]["txn_date"])):
@@ -227,12 +228,13 @@ if __name__ == '__main__':
                     statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                     statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
                 else:
-                    statements_obj[key] = return_obj[key]
+                    statements_obj[key] = copy.deepcopy(return_obj[key])
 
                 if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (
                 len(statements_obj[key]["txn_date"])):
                     print("Error: Transaction count disparity")
 
+        # if Square db key in text, identify statement as Square DB
         elif square_DB_ID in text:
             print("Square DB")
             stmt_style = "PAR"
@@ -242,20 +244,20 @@ if __name__ == '__main__':
                 return_obj = square_db_parse(parser_dir + '/' + item)
                 for key in return_obj:
                     if key in statements_obj:
-                        statements_obj[key]["opening_date"].append(return_obj[key]["opening_date"])
-                        statements_obj[key]["opening_bal"].append(return_obj[key]["opening_bal"])
+                        statements_obj[key]["opening_date"].extend(return_obj[key]["opening_date"])
+                        statements_obj[key]["opening_bal"].extend(return_obj[key]["opening_bal"])
                         statements_obj[key]["closing_date"].extend(return_obj[key]["closing_date"])
-                        statements_obj[key]["closing_bal"].append(return_obj[key]["closing_bal"])
+                        statements_obj[key]["closing_bal"].extend(return_obj[key]["closing_bal"])
                         statements_obj[key]["txn_desc"].extend(return_obj[key]["txn_desc"])
                         statements_obj[key]["txn_date"].extend(return_obj[key]["txn_date"])
                         statements_obj[key]["txn_amt"].extend(return_obj[key]["txn_amt"])
+
                     else:
-                        statements_obj[key] = return_obj[key]
+                        statements_obj[key] = copy.deepcopy(return_obj[key])
 
-                if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (len(statements_obj[key]["txn_date"])):
-                    print("Error: Transaction count disparity")
+                    if (len(statements_obj[key]["txn_amt"])) != (len(statements_obj[key]["txn_desc"])) != (len(statements_obj[key]["txn_date"])):
+                        print("Error: Transaction count disparity")
 
-    print(statements_obj)
 
     for key in statements_obj:
         write_excel_file(statement_name, stmt_style, parser_dir, statements_obj[key])
