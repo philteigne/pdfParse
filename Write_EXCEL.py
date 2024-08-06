@@ -24,8 +24,8 @@ def write_excel_file(statement_name, stmt_style, parser_dir, statements_obj):
         acct_id = ''
 
     if len(trans_desc) == 0:
-        print("Statement has no transactions.")
-        exit()
+        print(acct_id + " Statement has no transactions.")
+        return
 
     # write transaction information to .xls file
     wbName = acct_id + statement_name + '-PT_' + stmt_style + '_' + str(len(trans_desc)) + check_count
